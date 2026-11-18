@@ -1,0 +1,43 @@
+import { infiniteQueryOptions } from "@tanstack/react-query"
+
+export type Tweet = {
+  id: string
+  authorId: string
+  author: { name: string; handle: string }
+  content: string
+  mediaUrls: string[]
+  createdAt: string
+  likeCount: number
+  retweetCount: number
+  replyCount: number
+  likedByMe: boolean
+  retweetedByMe: boolean
+}
+
+export type TimelinePage = {
+  items: Tweet[]
+  nextCursor: string | null
+}
+
+export const TIMELINE_PAGE_SIZE = 20
+
+export function timelineUrl(cursor: string | null): string {
+  const params = new URLSearchParams({ limit: TIMELINE_PAGE_SIZE.toString() })
+  if (cursor) params.set("cursor", cursor)
+  return `/api/timeline?${params.toString()}`
+}
+
+/**
+ * The signed-in user's home timeline: their own tweets plus those of the
+ * accounts they follow, newest first, a page at a time.
+ */
+export const timelineQueryOptions = infiniteQueryOptions({
+  queryKey: ["timeline"] as const,
+  queryFn: async ({ pageParam }): Promise<TimelinePage> => {
+    const res = await fetch(timelineUrl(pageParam), { credentials: "include" })
+    if (!res.ok) throw new Error(`Couldn't load the timeline (${res.status.toString()})`)
+    return (await res.json()) as TimelinePage
+  },
+  initialPageParam: null as string | null,
+  getNextPageParam: (lastPage) => lastPage.nextCursor,
+})
