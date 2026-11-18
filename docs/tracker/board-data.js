@@ -12,11 +12,11 @@ window.BOARD = {
       "description": "Lets people create an account and sign in with an email and password, and keeps the rest of the app behind sign-in. Anyone who is not signed in only sees the sign-in and sign-up screens. This comes first because every other part of the app depends on a signed-in user.\n\nCovers: R1 sign-up, R2 sign-in, R3 sign-in gate, NF4 security of access\n\nSource: docs/epics/x-clone-v3-epics.md#epic-1-accounts-and-sign-in",
       "acceptanceCriteria": [],
       "parent": null,
-      "status": "New",
+      "status": "In Progress",
       "source": "docs/epics/x-clone-v3-epics.md#epic-1-accounts-and-sign-in",
       "created": "2026-11-12T10:00",
-      "updated": "2026-11-12T10:00",
-      "updates": 0
+      "updated": "2026-11-18T11:41",
+      "updates": 1
     },
     {
       "key": "XC-2",
@@ -68,11 +68,31 @@ window.BOARD = {
         "If the email is already used or the details are invalid, I see a clear message and no account is created."
       ],
       "parent": "XC-1",
-      "status": "New",
+      "status": "In QA",
       "source": "docs/stories/x-clone-v3-epic-1-stories.md#story-11-sign-up",
       "created": "2026-11-12T10:00",
-      "updated": "2026-11-12T10:00",
-      "updates": 0
+      "updated": "2026-11-18T11:47",
+      "updates": 6,
+      "comments": [
+        {
+          "author": "Claude",
+          "role": "AI Dev",
+          "created": "2026-11-18T11:41",
+          "body": "Started from 7c5b54c."
+        },
+        {
+          "author": "Claude",
+          "role": "AI Dev",
+          "created": "2026-11-18T11:42",
+          "body": "Ready for review (commit on top of base 7c5b54c).\n\nFiles changed:\n- src/frontend/e2e/xc-5.spec.ts (new): AC1, AC2, AC3 tests.\n\nNo app code changed: the sign-up page (routes/_auth/sign-up.tsx, hooks/use-auth-submit.ts, lib/auth-errors.ts) already met all three criteria, so the tests passed on the first run. No new logic, so no new Vitest tests.\n\nChecks:\n- pnpm exec tsc -b: pass\n- pnpm lint: pass\n- pnpm test (Vitest): pass (2/2)\n- pnpm e2e e2e/xc-5.spec.ts: pass (3/3); full e2e suite incl. smoke: pass (4/4)\n\nDecisions / for the reviewer:\n- The spec runs signed out (test.use with empty storageState), so the saved sign-in is never used or signed out.\n- Each run creates throwaway accounts on the shared API (xc5-<label>-<timestamp>@example.com, about 3 per run). Unavoidable for testing sign-up against the real API; there is no delete-account endpoint used.\n- 'No account is created' is proven by trying to sign in with the attempted credentials through the API (expected to fail). For the duplicate email, the original account is created via the API first, then the UI attempt with a different password must not sign in.\n- The duplicate-email assertion checks the app's own wording ('An account with this email already exists. Try signing in instead.') rather than /already exists/, which would also match the raw server message.\n- 'Invalid details' is covered by an invalid email, a too-short password (<8) and mismatched confirmation. The 8-character minimum is the client's rule; the PRD leaves password rules 'Not known yet' (NF4)."
+        },
+        {
+          "author": "Claude",
+          "role": "AI Review",
+          "created": "2026-11-18T11:47",
+          "body": "Review of 7c5b54c..e9e2cd5: Approve, no blocking findings. Full review in docs/reviews/xc-5-review.md.\n\nNon-blocking:\n- xc-5.spec.ts:107-109: add a check that the original account still signs in after the used-email attempt.\n- xc-5.spec.ts:149: canSignIn with 'not-an-email' is always false (the API rejects the format), so it proves nothing. The bad-email and short-password steps don't check that Sign out is absent (the URL check covers it).\n- xc-5.spec.ts:17-21: each run creates about 3 throwaway accounts on the shared API. Worth documenting.\n- AC1 and AC2 tests overlap but each checks something different. No change needed."
+        }
+      ]
     },
     {
       "key": "XC-6",
