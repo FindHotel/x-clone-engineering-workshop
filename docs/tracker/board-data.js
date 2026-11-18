@@ -68,11 +68,11 @@ window.BOARD = {
         "If the email is already used or the details are invalid, I see a clear message and no account is created."
       ],
       "parent": "XC-1",
-      "status": "In Acceptance",
+      "status": "Done",
       "source": "docs/stories/x-clone-v3-epic-1-stories.md#story-11-sign-up",
       "created": "2026-11-12T10:00",
-      "updated": "2026-11-18T11:52",
-      "updates": 11,
+      "updated": "2026-11-18T11:58",
+      "updates": 12,
       "comments": [
         {
           "author": "Claude",
@@ -142,6 +142,12 @@ window.BOARD = {
           "role": "AI QA",
           "created": "2026-11-18T11:52",
           "body": "QA evidence summary for XC-5 (3/3 pass):\n- AC1 — Create an account with email and password: pass\n- AC2 — Signed in and taken into the app after sign-up: pass\n- AC3 — Used email / invalid details show a clear message, no account created: pass\n\nRe-run the evidence (from src/frontend, dev server running, sign-in saved): pnpm e2e:evidence e2e/xc-5.spec.ts"
+        },
+        {
+          "author": "karcsi",
+          "role": "PO",
+          "created": "2026-11-18T11:58",
+          "body": "PO karcsi: In Acceptance → Done"
         }
       ]
     },
