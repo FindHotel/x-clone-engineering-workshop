@@ -1,8 +1,9 @@
 import { HugeiconsIcon } from "@hugeicons/react"
-import { FavouriteIcon } from "@hugeicons/core-free-icons"
+import { FavouriteIcon, RepeatIcon } from "@hugeicons/core-free-icons"
 
 import { Button } from "@/components/ui/button"
 import { useLikeTweet } from "@/hooks/use-like-tweet"
+import { useRetweetTweet } from "@/hooks/use-retweet-tweet"
 import { formatRelativeTime } from "@/lib/format-relative-time"
 import { formatHandle } from "@/lib/user"
 import { cn } from "@/lib/utils"
@@ -44,9 +45,37 @@ export function TweetCard({ tweet }: { tweet: Tweet }) {
         </div>
       )}
       <footer className="-ml-2 flex items-center gap-4">
+        <RetweetButton tweet={tweet} />
         <LikeButton tweet={tweet} />
       </footer>
     </article>
+  )
+}
+
+function RetweetButton({ tweet }: { tweet: Tweet }) {
+  const { mutate } = useRetweetTweet(tweet.id)
+  const retweeted = tweet.retweetedByMe
+  const count = tweet.retweetCount
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      aria-pressed={retweeted}
+      aria-label={`Retweet, ${count.toString()} ${count === 1 ? "retweet" : "retweets"}`}
+      onClick={() => {
+        mutate(!retweeted)
+      }}
+      className={cn(
+        "rounded-full text-muted-foreground hover:bg-emerald-500/10 hover:text-emerald-600",
+        retweeted && "text-emerald-600 dark:text-emerald-500"
+      )}
+    >
+      <HugeiconsIcon aria-hidden icon={RepeatIcon} strokeWidth={2} className="size-4" />
+      {/* As on X, a zero count shows nothing; the label above still says it. */}
+      {count > 0 && <span className="tabular-nums">{count}</span>}
+    </Button>
   )
 }
 
@@ -75,7 +104,7 @@ function LikeButton({ tweet }: { tweet: Tweet }) {
         strokeWidth={2}
         className={cn("size-4", liked && "fill-current")}
       />
-      {/* Like X, a zero count shows nothing; the label above still says it. */}
+      {/* As on X, a zero count shows nothing; the label above still says it. */}
       {tweet.likeCount > 0 && <span className="tabular-nums">{tweet.likeCount}</span>}
     </Button>
   )

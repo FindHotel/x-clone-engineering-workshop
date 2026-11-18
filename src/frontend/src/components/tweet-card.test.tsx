@@ -62,4 +62,11 @@ describe("TweetCard", () => {
     expect(like).toHaveAttribute("aria-pressed", "false")
     expect(like).toHaveTextContent(/^$/)
   })
+
+  it("shows the retweet count and whether I retweeted it", () => {
+    render(<TweetCard tweet={{ ...tweet, retweetCount: 1, retweetedByMe: true }} />)
+    const retweet = screen.getByRole("button", { name: "Retweet, 1 retweet" })
+    expect(retweet).toHaveAttribute("aria-pressed", "true")
+    expect(retweet).toHaveTextContent("1")
+  })
 })
