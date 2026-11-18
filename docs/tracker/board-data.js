@@ -68,11 +68,11 @@ window.BOARD = {
         "If the email is already used or the details are invalid, I see a clear message and no account is created."
       ],
       "parent": "XC-1",
-      "status": "In QA",
+      "status": "In Acceptance",
       "source": "docs/stories/x-clone-v3-epic-1-stories.md#story-11-sign-up",
       "created": "2026-11-12T10:00",
-      "updated": "2026-11-18T11:47",
-      "updates": 6,
+      "updated": "2026-11-18T11:52",
+      "updates": 11,
       "comments": [
         {
           "author": "Claude",
@@ -91,6 +91,57 @@ window.BOARD = {
           "role": "AI Review",
           "created": "2026-11-18T11:47",
           "body": "Review of 7c5b54c..e9e2cd5: Approve, no blocking findings. Full review in docs/reviews/xc-5-review.md.\n\nNon-blocking:\n- xc-5.spec.ts:107-109: add a check that the original account still signs in after the used-email attempt.\n- xc-5.spec.ts:149: canSignIn with 'not-an-email' is always false (the API rejects the format), so it proves nothing. The bad-email and short-password steps don't check that Sign out is absent (the URL check covers it).\n- xc-5.spec.ts:17-21: each run creates about 3 throwaway accounts on the shared API. Worth documenting.\n- AC1 and AC2 tests overlap but each checks something different. No change needed."
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T11:52",
+          "body": "AC1 — I can create an account by entering an email and a password: pass",
+          "attachments": [
+            {
+              "type": "video",
+              "path": "docs/qa/XC-5/ac1.webm",
+              "label": "AC1",
+              "ac": 1,
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T11:52",
+          "body": "AC2 — After signing up, I am signed in and taken into the app: pass",
+          "attachments": [
+            {
+              "type": "video",
+              "path": "docs/qa/XC-5/ac2.webm",
+              "label": "AC2",
+              "ac": 2,
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T11:52",
+          "body": "AC3 — If the email is already used or the details are invalid, I see a clear message and no account is created: pass",
+          "attachments": [
+            {
+              "type": "video",
+              "path": "docs/qa/XC-5/ac3.webm",
+              "label": "AC3",
+              "ac": 3,
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T11:52",
+          "body": "QA evidence summary for XC-5 (3/3 pass):\n- AC1 — Create an account with email and password: pass\n- AC2 — Signed in and taken into the app after sign-up: pass\n- AC3 — Used email / invalid details show a clear message, no account created: pass\n\nRe-run the evidence (from src/frontend, dev server running, sign-in saved): pnpm e2e:evidence e2e/xc-5.spec.ts"
         }
       ]
     },
