@@ -5,6 +5,7 @@ import { z } from "zod"
 
 import { seo } from "@/lib/seo"
 import { signIn } from "@/lib/auth-client"
+import { safeRedirectPath } from "@/lib/redirect"
 import { useAuthSubmit } from "@/hooks/use-auth-submit"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,6 +19,11 @@ import {
 } from "@/components/ui/form"
 
 export const Route = createFileRoute("/_auth/sign-in")({
+  // The page to return to after signing in, set by /_app's guard (XC-7).
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } => {
+    const redirect = safeRedirectPath(search.redirect)
+    return redirect ? { redirect } : {}
+  },
   head: () => ({
     meta: seo({ title: "Sign In | X Clone" }),
   }),
@@ -32,7 +38,8 @@ const signInSchema = z.object({
 type SignInValues = z.infer<typeof signInSchema>
 
 function SignInPage() {
-  const { formError, submit } = useAuthSubmit()
+  const { redirect } = Route.useSearch()
+  const { formError, submit } = useAuthSubmit(redirect)
 
   const form = useForm<SignInValues>({
     resolver: zodResolver(signInSchema),

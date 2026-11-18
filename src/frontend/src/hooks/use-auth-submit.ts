@@ -6,7 +6,8 @@ import { mapAuthErrorToMessage } from "@/lib/auth-errors"
 
 type AuthResult = { error: { code?: string; message?: string } | null }
 
-export function useAuthSubmit() {
+// `redirectTo`: an in-app path to land on once signed in (see lib/redirect.ts); Home otherwise.
+export function useAuthSubmit(redirectTo?: string) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [formError, setFormError] = useState<string | null>(null)
@@ -25,7 +26,8 @@ export function useAuthSubmit() {
       queryKey: ["session"],
       refetchType: "all",
     })
-    navigate({ to: "/" })
+    if (redirectTo) navigate({ href: redirectTo })
+    else navigate({ to: "/" })
   }
 
   return { formError, submit }

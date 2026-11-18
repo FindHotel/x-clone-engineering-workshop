@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router"
+import { safeRedirectPath } from "@/lib/redirect"
 import { sessionQueryOptions } from "@/lib/session"
 
 export const Route = createFileRoute("/_auth")({
@@ -6,13 +7,16 @@ export const Route = createFileRoute("/_auth")({
   // this, browsing back to a stale /sign-in history entry while still
   // signed in just re-renders the form, indistinguishable from actually
   // being signed out.
-  beforeLoad: async ({ context }) => {
+  beforeLoad: async ({ context, location }) => {
     const session = await context.queryClient.ensureQueryData(
       sessionQueryOptions
     )
 
     if (session) {
-      throw redirect({ to: "/" })
+      const redirectTo = safeRedirectPath(
+        (location.search as { redirect?: unknown }).redirect
+      )
+      throw redirectTo ? redirect({ href: redirectTo }) : redirect({ to: "/" })
     }
   },
   component: AuthLayout,
