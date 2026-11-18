@@ -64,3 +64,30 @@ export function updateTimelineTweet<TPageParam>(
     ),
   }
 }
+
+/** Returns the cached timeline with `tweet` at the very top, unless it's already in it. */
+export function prependTimelineTweet<TPageParam>(
+  data: InfiniteData<TimelinePage, TPageParam> | undefined,
+  tweet: Tweet
+): InfiniteData<TimelinePage, TPageParam> | undefined {
+  if (!data || data.pages.length === 0) return data
+  if (data.pages.some((page) => page.items.some((item) => item.id === tweet.id))) return data
+  const [first, ...rest] = data.pages
+  return { ...data, pages: [{ ...first, items: [tweet, ...first.items] }, ...rest] }
+}
+
+/** Returns the cached timeline without the tweet `tweetId`. */
+export function removeTimelineTweet<TPageParam>(
+  data: InfiniteData<TimelinePage, TPageParam> | undefined,
+  tweetId: string
+): InfiniteData<TimelinePage, TPageParam> | undefined {
+  if (!data) return data
+  return {
+    ...data,
+    pages: data.pages.map((page) =>
+      page.items.some((tweet) => tweet.id === tweetId)
+        ? { ...page, items: page.items.filter((tweet) => tweet.id !== tweetId) }
+        : page
+    ),
+  }
+}

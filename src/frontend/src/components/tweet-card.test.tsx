@@ -80,4 +80,11 @@ describe("TweetCard", () => {
     expect(reply).toHaveAttribute("aria-expanded", "true")
     expect(screen.getByRole("textbox", { name: "Your reply" })).toHaveFocus()
   })
+
+  it("shows a tweet that's still being posted without reply, retweet or like buttons", () => {
+    render(<TweetCard tweet={{ ...tweet, id: "pending-1" }} />)
+    expect(screen.getByText("Hello, timeline")).toBeInTheDocument()
+    expect(screen.getByRole("status")).toHaveTextContent("Posting…")
+    expect(screen.queryByRole("button")).not.toBeInTheDocument()
+  })
 })

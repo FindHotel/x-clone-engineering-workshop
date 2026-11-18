@@ -6,12 +6,25 @@ import { TweetBody } from "@/components/tweet-body"
 import { ReplyComposer, TweetReplies } from "@/components/tweet-replies"
 import { Button } from "@/components/ui/button"
 import { useLikeTweet } from "@/hooks/use-like-tweet"
+import { isPendingTweet } from "@/hooks/use-post-tweet"
 import { useRetweetTweet } from "@/hooks/use-retweet-tweet"
 import { cn } from "@/lib/utils"
 import type { Tweet } from "@/queries/timeline"
 
 export function TweetCard({ tweet }: { tweet: Tweet }) {
   const [replying, setReplying] = useState(false)
+
+  // Not saved yet: there's no tweet on the API to reply to, like or retweet.
+  if (isPendingTweet(tweet)) {
+    return (
+      <article aria-busy className="flex flex-col gap-2 border-b border-border px-4 py-3">
+        <TweetBody tweet={tweet} />
+        <p className="text-sm text-muted-foreground" role="status">
+          Posting…
+        </p>
+      </article>
+    )
+  }
 
   return (
     <article className="flex flex-col gap-2 border-b border-border px-4 py-3">

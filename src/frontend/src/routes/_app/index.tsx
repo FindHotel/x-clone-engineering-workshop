@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { TweetCard } from "@/components/tweet-card"
+import { TweetComposer } from "@/components/tweet-composer"
 import { Button } from "@/components/ui/button"
 import { useLoadMoreOnScroll } from "@/hooks/use-load-more-on-scroll"
 import { timelineQueryOptions } from "@/queries/timeline"
@@ -31,6 +32,8 @@ function Home() {
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold">Home</h1>
+
+      <TweetComposer />
 
       {status === "pending" && (
         <p className="text-muted-foreground" role="status">
