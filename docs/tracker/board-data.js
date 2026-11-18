@@ -196,11 +196,11 @@ window.BOARD = {
         "If there are no tweets yet, I see a simple empty message."
       ],
       "parent": "XC-2",
-      "status": "In QA",
+      "status": "Done",
       "source": "docs/stories/x-clone-v3-epic-2-stories.md#story-21-scroll-the-home-timeline",
       "created": "2026-11-12T10:00",
-      "updated": "2026-11-18T12:21",
-      "updates": 8,
+      "updated": "2026-11-18T12:28",
+      "updates": 26,
       "comments": [
         {
           "author": "Claude",
@@ -231,6 +231,168 @@ window.BOARD = {
           "role": "AI Review",
           "created": "2026-11-18T12:21",
           "body": "Review: APPROVE, no blocking findings (base f96528e). Full review: docs/reviews/xc-8-review.md\n\nNon-blocking:\n1. AC1/R4 still say \"all users\", but the build follows the PO's option 1 (own + followed accounts). The story text needs the PO's rewording.\n2. xc-8.spec.ts:32: each run adds 5 throwaway accounts and about 30 tweets to the shared API.\n3. xc-8.spec.ts:15: BASE_URL repeats playwright.config.ts's baseURL.\n4. xc-8.spec.ts:120: the check for 20 tweets before scrolling depends on the 1280x720 viewport and the 400px rootMargin, so it could get flaky.\n5. xc-8.spec.ts:159: the time regex is loose; the datetime attribute check is what really covers the time."
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T12:23",
+          "body": "AC1 — The home timeline shows tweets from all users, newest first: pass",
+          "attachments": [
+            {
+              "type": "video",
+              "path": "docs/qa/XC-8/ac1.webm",
+              "label": "AC1",
+              "ac": 1,
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T12:23",
+          "body": "AC2 — More tweets load automatically as I scroll, with no next-page button: pass",
+          "attachments": [
+            {
+              "type": "video",
+              "path": "docs/qa/XC-8/ac2.webm",
+              "label": "AC2",
+              "ac": 2,
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T12:23",
+          "body": "AC3 — Each tweet shows name and handle, time, text and image: pass",
+          "attachments": [
+            {
+              "type": "video",
+              "path": "docs/qa/XC-8/ac3.webm",
+              "label": "AC3",
+              "ac": 3,
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T12:23",
+          "body": "AC4 — No tweets yet shows a simple empty message: fail\nError: strict mode violation: getByText('No tweets yet') resolved to 2 elements: the app's empty message (\"No tweets yet. When people post, their tweets show up here.\") and the evidence caption div#__ev-caption (\"A simple message says there are no tweets yet\"). The app's message does render; the test's locator (e2e/xc-8.spec.ts, AC4) also matches the evidence-only caption, so it fails only in the evidence project.",
+          "attachments": [
+            {
+              "type": "video",
+              "path": "docs/qa/XC-8/ac4.webm",
+              "label": "AC4",
+              "ac": 4,
+              "result": "fail"
+            }
+          ]
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T12:23",
+          "body": "QA evidence summary (pnpm e2e:evidence e2e/xc-8.spec.ts, run once):\n- AC1 — Tweets from all users, newest first (PO option 1: own + followed): pass\n- AC2 — More tweets load automatically on scroll, no next-page button: pass\n- AC3 — Name, handle, time, text and image: pass\n- AC4 — Simple empty message: FAIL\n\nRe-run: cd src/frontend && pnpm e2e:evidence e2e/xc-8.spec.ts"
+        },
+        {
+          "author": "Claude",
+          "role": "QA",
+          "created": "2026-11-18T12:23",
+          "body": "Back to In Progress: AC4 failed in the QA evidence run.\n\n- AC4 — e2e/xc-8.spec.ts (AC4 test, \"A simple message says there are no tweets yet\" step): Error: strict mode violation: getByText('No tweets yet') resolved to 2 elements.\n  The second element is the evidence caption (div#__ev-caption), whose text contains \"no tweets yet\". In the video the app's empty message is on screen, so this looks like a test defect: the locator has to match the app's message only (for example scoped to the main element), and the caption has to stop matching it. It passed in the verify project because captions are only shown in evidence runs.\n\nTo do: fix the AC4 locator so it passes in both verify and evidence, then re-run QA."
+        },
+        {
+          "author": "Claude",
+          "role": "AI Dev",
+          "created": "2026-11-18T12:25",
+          "body": "Started from 0ed81e3, to fix QA's AC4 finding (the locator also matched the evidence caption)."
+        },
+        {
+          "author": "Claude",
+          "role": "AI Dev",
+          "created": "2026-11-18T12:26",
+          "body": "Fixed QA's AC4 finding in 4335385 (base 0ed81e3).\n\nFiles changed\n- e2e/xc-8.spec.ts: the AC4 locator now looks only inside the page's main element (page.getByRole(\"main\").getByText(\"No tweets yet\")). This changes a test because it was wrong about its criterion, not to weaken it. It also matched the evidence caption (\"A simple message says there are no tweets yet\"), which only appears in evidence runs. It still checks the same message, plus that there are no tweets. No app code changed.\n\nChecks\n- pnpm exec tsc -b: pass\n- pnpm lint: pass\n- pnpm e2e e2e/xc-8.spec.ts: 4/4 pass\n- pnpm e2e:evidence e2e/xc-8.spec.ts -g AC4: pass (the run where it failed before)\n\nFor the reviewer\n- AC1–AC3 already looked only inside main (articles), and AC2's button/link checks can't match a caption, so no other test had the same problem.\n- The review's non-blocking notes (BASE_URL duplicate, the count of 20 before scrolling, the loose time regex) weren't changed; they're out of scope for this fix."
+        },
+        {
+          "author": "Claude",
+          "role": "AI Review",
+          "created": "2026-11-18T12:27",
+          "body": "Review (round 2, base 0ed81e3): APPROVE, no blocking findings. The AC4 locator, now scoped to main, no longer matches the evidence caption and still checks the real empty message. Full review: docs/reviews/xc-8-review.md\n\nNon-blocking:\n1. xc-8.spec.ts:182: could match the start of the text (/^No tweets yet/) to be stricter.\n2. AC1 relies on the PO's option 1 (own + followed); the story text still says \"all users\"."
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T12:28",
+          "body": "AC1 — The home timeline shows tweets from all users, newest first: pass",
+          "attachments": [
+            {
+              "type": "video",
+              "path": "docs/qa/XC-8/ac1.webm",
+              "label": "AC1",
+              "ac": 1,
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T12:28",
+          "body": "AC2 — More tweets load automatically as I scroll, with no next-page button: pass",
+          "attachments": [
+            {
+              "type": "video",
+              "path": "docs/qa/XC-8/ac2.webm",
+              "label": "AC2",
+              "ac": 2,
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T12:28",
+          "body": "AC3 — Each tweet shows name and handle, time, text and image: pass",
+          "attachments": [
+            {
+              "type": "video",
+              "path": "docs/qa/XC-8/ac3.webm",
+              "label": "AC3",
+              "ac": 3,
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T12:28",
+          "body": "AC4 — No tweets yet shows a simple empty message: pass",
+          "attachments": [
+            {
+              "type": "video",
+              "path": "docs/qa/XC-8/ac4.webm",
+              "label": "AC4",
+              "ac": 4,
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T12:28",
+          "body": "QA evidence summary, round 2 (pnpm e2e:evidence e2e/xc-8.spec.ts, run once):\n- AC1 — The home timeline shows tweets from all users, newest first: pass\n- AC2 — More tweets load automatically as I scroll, with no next-page button: pass\n- AC3 — Each tweet shows name and handle, time, text and image: pass\n- AC4 — No tweets yet shows a simple empty message: pass\n\nRe-run: cd src/frontend && pnpm e2e:evidence e2e/xc-8.spec.ts"
+        },
+        {
+          "author": "karcsi",
+          "role": "PO",
+          "created": "2026-11-18T12:28",
+          "body": "PO karcsi: In Acceptance → Done"
         }
       ]
     },

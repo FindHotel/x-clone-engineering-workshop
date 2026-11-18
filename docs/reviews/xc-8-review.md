@@ -1,5 +1,24 @@
 # XC-8 review: Scroll the home timeline
 
+## Round 2: AC4 fix after QA
+
+- **Base commit reviewed:** 0ed81e3 (change set `0ed81e3..4335385`, one edit to `src/frontend/e2e/xc-8.spec.ts`)
+- **Verdict:** Approve. No blocking findings.
+
+QA failed AC4 in the evidence run because `getByText("No tweets yet")` also matched the evidence caption, which `fixtures.ts` attaches to `document.documentElement`, outside `<main>`. Scoping the locator to `main` fixes that without weakening the test. It still checks the app's real empty message (`src/routes/_app/index.tsx`), and line 184 still checks that no tweets show. `tsc -b` and `lint` are clean.
+
+### Blocking
+- None.
+
+### Non-blocking
+1. `src/frontend/e2e/xc-8.spec.ts:182-183`: optionally match the start of the text (`getByText(/^No tweets yet/)`) so the locator can't pick up other text by accident.
+2. `src/frontend/e2e/xc-8.spec.ts:7-8,87`: AC1 reads "all users" as "own + followed accounts". This holds by the PO's decision on the board (2026-11-18 12:15, "Go with Option #1"); round 1's note about rewording the story still applies.
+
+### Acceptance criteria → tests
+- AC1 → ok (by the PO's option 1) · AC2 → ok · AC3 → ok · AC4 → ok
+
+## Round 1: initial build
+
 - **Base commit reviewed:** f96528e (change set `f96528e..bf40142`: `f41ccfe` is the story; `bf40142` only changes `docs/tracker/board-data.js`, which was left out of the review)
 - **Verdict:** Approve. No blocking findings.
 
