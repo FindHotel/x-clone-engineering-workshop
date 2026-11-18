@@ -25,11 +25,11 @@ window.BOARD = {
       "description": "Delivers the core read-and-write loop: a newest-first timeline that keeps loading as the user scrolls, with each tweet showing author, time, text and optional image. Users can also post a short tweet with one optional image and see it at the top straight away.\n\nCovers: R4 timeline, R5 infinite scroll, R6 tweet display, R7 posting with optional image, R8 new tweet appears at top\n\nSource: docs/epics/x-clone-v3-epics.md#epic-2-home-timeline-and-posting",
       "acceptanceCriteria": [],
       "parent": null,
-      "status": "New",
+      "status": "In Progress",
       "source": "docs/epics/x-clone-v3-epics.md#epic-2-home-timeline-and-posting",
       "created": "2026-11-12T10:00",
-      "updated": "2026-11-12T10:00",
-      "updates": 0
+      "updated": "2026-11-18T12:10",
+      "updates": 1
     },
     {
       "key": "XC-3",
@@ -196,11 +196,37 @@ window.BOARD = {
         "If there are no tweets yet, I see a simple empty message."
       ],
       "parent": "XC-2",
-      "status": "New",
+      "status": "In Review",
       "source": "docs/stories/x-clone-v3-epic-2-stories.md#story-21-scroll-the-home-timeline",
       "created": "2026-11-12T10:00",
-      "updated": "2026-11-12T10:00",
-      "updates": 0
+      "updated": "2026-11-18T12:19",
+      "updates": 6,
+      "comments": [
+        {
+          "author": "Claude",
+          "role": "AI Dev",
+          "created": "2026-11-18T12:10",
+          "body": "Started from f96528e."
+        },
+        {
+          "author": "Claude",
+          "role": "AI Dev",
+          "created": "2026-11-18T12:13",
+          "body": "Blocked: question for the product owner before any code is written.\n\nAC1 says \"The home timeline shows tweets from all users, newest first\", and the PRD backs it (R4; Out of Scope: \"Following people (everyone sees the same timeline)\").\n\nThe shared API can't serve that as-is (checked /api/openapi.json):\n- GET /api/timeline, the only cursor-paginated feed (needed for AC2, infinite scroll), returns only the caller's own top-level tweets plus those of the people they follow.\n- GET /api/search/tweets spans all authors but needs a 1-100 char query, isn't paginated and caps at 50.\n- NF5 rules out new backend work.\n\nOptions for the PO:\n1. Accept /api/timeline's semantics for v1 (own + followed accounts) and reword AC1/R4.\n2. Ask the backend for an \"all tweets\" paginated feed (an exception to NF5).\n3. Have the app follow every user automatically so /api/timeline covers everyone (changes each account's shared follow state; brings in following, which is out of scope).\n\nTicket stays In Progress. No commits made; base is f96528e."
+        },
+        {
+          "author": "karcsi",
+          "role": "PO",
+          "created": "2026-11-18T12:15",
+          "body": "Go with Option #1"
+        },
+        {
+          "author": "Claude",
+          "role": "AI Dev",
+          "created": "2026-11-18T12:19",
+          "body": "Built in f41ccfe (base f96528e). AC1 follows the PO's decision (option 1, 12:15): the timeline is GET /api/timeline, i.e. the reader's own tweets plus those of the accounts they follow, newest first.\n\nFiles changed\n- src/queries/timeline.ts (+ test): infinite query on /api/timeline, 20 per page, cursor paging, credentials: \"include\"\n- src/hooks/use-load-more-on-scroll.ts (+ test): IntersectionObserver sentinel, re-armed after each page\n- src/components/tweet-card.tsx (+ test): name, @handle, relative time in <time datetime>, text, images\n- src/lib/user.ts (+ test): formatHandle\n- src/routes/_app/index.tsx: the home page is now the timeline, with loading, empty (\"No tweets yet…\"), error and retry states (replaces the \"Welcome\" placeholder)\n- e2e/xc-8.spec.ts: one test per AC\n\nChecks\n- pnpm exec tsc -b: pass\n- pnpm lint: pass\n- pnpm test (Vitest): 15/15 pass\n- pnpm e2e e2e/xc-8.spec.ts: 4/4 pass (green on the 3rd run: run 1 was missing an Origin header in the test setup; run 2 caught the @@handle bug below)\n- pnpm e2e e2e/smoke.spec.ts: pass. xc-5.spec.ts not re-run (it signs up accounts on the shared API; the sign-up screens didn't change)\n\nFor the reviewer\n- AC1's text still says \"all users\". Rewording it to match the PO's decision is up to the PO.\n- The API is inconsistent about handles: the sign-up user's handle has no \"@\", but the timeline's author.handle starts with one. formatHandle shows exactly one \"@\" either way.\n- The e2e tests sign up throwaway accounts (xc8-…@example.com) on the shared API and post about 30 tweets per run, one with a 1x1 PNG. Each test signs its own browser context in with that account's cookie; the person's saved sign-in is never used or changed. Ran with the person's OK.\n- The next-page error state has a \"Try again\" button. It only appears after a failed load, so it isn't a \"next page\" button (AC2).\n- Like, retweet and reply counts are in the Tweet type but not shown yet; that's XC-10, XC-11 and XC-12."
+        }
+      ]
     },
     {
       "key": "XC-9",
