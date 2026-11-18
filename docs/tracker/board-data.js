@@ -12,11 +12,11 @@ window.BOARD = {
       "description": "Lets people create an account and sign in with an email and password, and keeps the rest of the app behind sign-in. Anyone who is not signed in only sees the sign-in and sign-up screens. This comes first because every other part of the app depends on a signed-in user.\n\nCovers: R1 sign-up, R2 sign-in, R3 sign-in gate, NF4 security of access\n\nSource: docs/epics/x-clone-v3-epics.md#epic-1-accounts-and-sign-in",
       "acceptanceCriteria": [],
       "parent": null,
-      "status": "In Progress",
+      "status": "Done",
       "source": "docs/epics/x-clone-v3-epics.md#epic-1-accounts-and-sign-in",
       "created": "2026-11-12T10:00",
-      "updated": "2026-11-18T11:41",
-      "updates": 1
+      "updated": "2026-11-18T12:53",
+      "updates": 5
     },
     {
       "key": "XC-2",
@@ -162,11 +162,88 @@ window.BOARD = {
         "If my email or password is wrong, I see a clear message and stay signed out."
       ],
       "parent": "XC-1",
-      "status": "New",
+      "status": "Done",
       "source": "docs/stories/x-clone-v3-epic-1-stories.md#story-12-sign-in",
       "created": "2026-11-12T10:00",
-      "updated": "2026-11-12T10:00",
-      "updates": 0
+      "updated": "2026-11-18T12:42",
+      "updates": 12,
+      "comments": [
+        {
+          "author": "Claude",
+          "role": "AI Dev",
+          "created": "2026-11-18T12:35",
+          "body": "Started from 1b55b84."
+        },
+        {
+          "author": "Claude",
+          "role": "AI Dev",
+          "created": "2026-11-18T12:36",
+          "body": "Ready for review (commit on top of base 1b55b84).\n\nFiles changed:\n- src/frontend/e2e/xc-6.spec.ts (new): AC1–AC3, each in a signed-out context with a fresh account created via the API\n- src/frontend/src/lib/auth-errors.test.ts (new): unit tests for mapAuthErrorToMessage\n\nNo app code changed: the sign-in screen, error mapping and redirect to / from the starter scaffold already met every criterion; the tests were written first and passed against it.\n\nChecks (round 2, all green): tsc -b pass · lint pass · vitest related pass (5) · e2e xc-6 pass (3/3) · pnpm test pass (20) · pnpm e2e pass (11/11).\nRound 1: tsc, lint, e2e xc-6 pass; no unit tests yet.\n\nDecisions made unattended:\n- Kept the existing message \"Incorrect email or password.\" for both a wrong password and an unknown email (doesn't reveal which accounts exist; NF4).\n- AC2 \"home timeline\" is checked as URL /, the Home heading and either a tweet or the empty state.\n- AC3 \"stay signed out\" is checked by no Sign out button and / redirecting back to /sign-in.\n\nFor the reviewer: the tests create throwaway xc6-*@example.com accounts on the shared API (same approach as XC-5)."
+        },
+        {
+          "author": "Claude",
+          "role": "AI Review",
+          "created": "2026-11-18T12:37",
+          "body": "Review: APPROVE (base 1b55b84). No blocking findings. Saved to docs/reviews/xc-6-review.md.\n\nNon-blocking:\n- e2e/xc-6.spec.ts:24 — each run creates 3 throwaway accounts on the shared API (same as XC-5).\n- e2e/xc-6.spec.ts:98,109 — exact-text check couples the spec to the copy in lib/auth-errors.ts.\n- lib/auth-errors.ts:13 — unknown error codes show the server's raw message (outside XC-6's criteria).\n\nCriteria → tests: AC1 ok · AC2 ok · AC3 ok."
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T12:39",
+          "body": "AC1 — Sign in with email and password: pass",
+          "attachments": [
+            {
+              "type": "video",
+              "path": "docs/qa/XC-6/ac1.webm",
+              "label": "AC1",
+              "ac": 1,
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T12:39",
+          "body": "AC2 — After signing in, taken to the home timeline: pass",
+          "attachments": [
+            {
+              "type": "video",
+              "path": "docs/qa/XC-6/ac2.webm",
+              "label": "AC2",
+              "ac": 2,
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T12:39",
+          "body": "AC3 — Wrong email or password shows a clear message, stays signed out: pass",
+          "attachments": [
+            {
+              "type": "video",
+              "path": "docs/qa/XC-6/ac3.webm",
+              "label": "AC3",
+              "ac": 3,
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T12:39",
+          "body": "QA evidence summary (evidence run, 3/3 passed):\n- AC1 — Sign in with email and password: pass\n- AC2 — Taken to the home timeline after signing in: pass\n- AC3 — Wrong email or password: clear message, stays signed out: pass\n\nRe-run: cd src/frontend && pnpm e2e:evidence e2e/xc-6.spec.ts\n\nMoving to In Acceptance for a person to watch and accept."
+        },
+        {
+          "author": "karcsi",
+          "role": "PO",
+          "created": "2026-11-18T12:42",
+          "body": "PO karcsi: In Acceptance → Done"
+        }
+      ]
     },
     {
       "key": "XC-7",
@@ -178,11 +255,139 @@ window.BOARD = {
         "If I open any other page while signed out, I am sent to the sign-in screen."
       ],
       "parent": "XC-1",
-      "status": "New",
+      "status": "Done",
       "source": "docs/stories/x-clone-v3-epic-1-stories.md#story-13-keep-the-app-behind-sign-in",
       "created": "2026-11-12T10:00",
-      "updated": "2026-11-12T10:00",
-      "updates": 0
+      "updated": "2026-11-18T12:53",
+      "updates": 22,
+      "comments": [
+        {
+          "author": "Claude",
+          "role": "AI Dev",
+          "created": "2026-11-18T12:39",
+          "body": "Started from eb6ce8d."
+        },
+        {
+          "author": "Claude",
+          "role": "AI Dev",
+          "created": "2026-11-18T12:41",
+          "body": "Ready for review (ccd42a5 on top of base eb6ce8d).\n\nFiles changed:\n- src/frontend/src/routes/_app/$.tsx (new): a catch-all route under the signed-in /_app layout. Every path no other route matches now goes through the same sign-in guard, so signed out it redirects to /sign-in. Signed in, it shows \"Page not found\" with a \"Back to Home\" button (reuses components/ui Button).\n- src/frontend/src/routeTree.gen.ts: regenerated by the router plugin (not hand-edited).\n- src/frontend/e2e/xc-7.spec.ts (new): AC1 and AC2, signed-out context.\n\nRoot cause: \"/\" was already guarded by _app.tsx, but any other path (e.g. /settings) fell through to the router's bare \"Not Found\" page while signed out. The tests showed this: round 1 was red with /settings not redirected.\n\nChecks:\n- Round 1: tsc pass · lint pass · e2e xc-7 FAIL (2/2, as expected before the fix).\n- Round 2: tsc pass · lint pass · vitest related: no related tests (the route has no logic) · e2e xc-7 pass (2/2) · pnpm test pass (20) · pnpm e2e pass (13/13).\n- Also checked by hand (no file written): signed in, /settings shows \"Page not found\" inside the app header, and \"Back to Home\" goes to /.\n\nDecisions made unattended:\n- Signed-in unknown URLs show an in-app \"Page not found\" page. A person might prefer a redirect to Home.\n- The sign-in redirect does not remember the page that was asked for (no ?redirect=), because the story does not ask for it.\n- AC1 also checks that /api/timeline is never requested while signed out, so nothing private is fetched before a redirect.\n- No Vitest test was added: the change is a route with no logic, and the e2e tests cover it.\n\nFor the reviewer: the last AC2 step simulates moving to another page without a reload (history.pushState plus popstate) to cover the client-side redirect, not just full page loads."
+        },
+        {
+          "author": "Claude",
+          "role": "AI Review",
+          "created": "2026-11-18T12:42",
+          "body": "Review: APPROVE (base eb6ce8d). No blocking findings. Saved to docs/reviews/xc-7-review.md.\n\nNon-blocking:\n- routes/_app/$.tsx:15 — the signed-in \"Page not found\" page has no spec; consider a check in a later story.\n- routes/_app.tsx:18 — the sign-in redirect drops the requested page, so people land on Home after signing in; for the PO to consider.\n- e2e/xc-7.spec.ts:7 — signed-out context used correctly; nothing to change.\n\nCriteria → tests: AC1 ok · AC2 ok."
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T12:43",
+          "body": "AC1 — Signed out, only the sign-in and sign-up screens are visible: pass",
+          "attachments": [
+            {
+              "type": "video",
+              "path": "docs/qa/XC-7/ac1.webm",
+              "label": "AC1",
+              "ac": 1,
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T12:43",
+          "body": "AC2 — Any other page while signed out sends me to sign-in: pass",
+          "attachments": [
+            {
+              "type": "video",
+              "path": "docs/qa/XC-7/ac2.webm",
+              "label": "AC2",
+              "ac": 2,
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T12:43",
+          "body": "QA evidence summary (evidence run, 2/2 passed):\n- AC1 — Signed out, only the sign-in and sign-up screens are visible: pass\n- AC2 — Any other page while signed out sends me to sign-in: pass\n\nRe-run: cd src/frontend && pnpm e2e:evidence e2e/xc-7.spec.ts\n\nMoving to In Acceptance for a person to watch and accept."
+        },
+        {
+          "author": "karcsi",
+          "role": "PO",
+          "created": "2026-11-18T12:47",
+          "body": "The sign-in redirect should be implemented, to redirect to the request page after successful sign-in"
+        },
+        {
+          "author": "karcsi",
+          "role": "PO",
+          "created": "2026-11-18T12:47",
+          "body": "Pushed back by PO karcsi: Missing requirement: The sign-in redirect should be implemented, to redirect to the request page after successful sign-in"
+        },
+        {
+          "author": "Claude",
+          "role": "AI Dev",
+          "created": "2026-11-18T12:48",
+          "body": "Started (send-back 1: the PO asked that sign-in return people to the page they asked for) from ccd42a5."
+        },
+        {
+          "author": "Claude",
+          "role": "AI Dev",
+          "created": "2026-11-18T12:50",
+          "body": "Ready for review (send-back 1). The commit sits on top of base ccd42a5.\n\nTo-do from the PO: after signing in, return people to the page they asked for. Done.\n\nFiles changed:\n- src/frontend/src/routes/_app.tsx: the signed-out redirect now carries ?redirect=<the page asked for>, with its query and hash. Home (\"/\") is left out, because signing in leads there anyway.\n- src/frontend/src/routes/_auth/sign-in.tsx: validateSearch reads `redirect`, passes it through safeRedirectPath, and hands it to the submit hook.\n- src/frontend/src/hooks/use-auth-submit.ts: an optional redirectTo. After signing in it navigates there, or to Home when it's empty. Sign-up is unchanged.\n- src/frontend/src/routes/_auth.tsx: if someone who is already signed in opens /sign-in?redirect=…, they are sent to that page (if it's safe) instead of Home.\n- src/frontend/src/lib/redirect.ts (new) and redirect.test.ts (new): safeRedirectPath keeps only same-origin in-app paths. It rejects absolute, protocol-relative (//, /\\, /<tab>/), javascript: and relative values, and /sign-in or /sign-up (which would loop).\n- src/frontend/e2e/xc-7.spec.ts: AC2 changed.\n\nTest change, and why: AC2 used to expect the URL to end in /sign-in. With the PO's requirement that check is wrong, because the URL now carries ?redirect=. AC2 now checks pathname /sign-in plus the exact redirect value for every page, and its new last steps sign in from /tweets/123?tab=replies#top and check we land back on exactly that page. Nothing was weakened; AC1 is unchanged.\n\nChecks:\n- Round 1: tsc pass · lint pass · e2e xc-7 AC2 FAIL (no redirect remembered, as expected) · AC1 pass.\n- Round 2: tsc pass · lint pass · vitest related pass (4) · e2e xc-7 pass (2/2) · pnpm test pass (24) · pnpm e2e pass (13/13).\n- Also checked by hand, signed in (no file written): /sign-in?redirect=/settings goes to /settings; //evil.example and https://evil.example both go to /; plain /sign-in goes to /.\n\nDecisions made unattended:\n- The return path is carried in the URL (?redirect=), not in storage, so it survives a reload and works in a new tab.\n- Only same-origin paths are honoured (otherwise the redirect could send people to another site, NF4). Anything else falls back to Home without an error.\n- The \"Sign up\" link on the sign-in screen does not carry the redirect, so signing up still lands on Home (XC-5 AC2 unchanged). Easy to add if the PO wants it.\n- The return page is checked on a \"Page not found\" address, because Home is the only real page the app has so far."
+        },
+        {
+          "author": "Claude",
+          "role": "AI Review",
+          "created": "2026-11-18T12:51",
+          "body": "Review (send-back 1): APPROVE (base ccd42a5). No blocking findings. Saved as round 2 in docs/reviews/xc-7-review.md.\n\nOpen redirect checked: only same-origin in-app paths are followed.\n\nNon-blocking:\n- routes/_auth/sign-in.tsx:126 — the \"Sign up\" link drops ?redirect=, so signing up from a deep link lands on Home (the PO asked only about sign-in; a cheap follow-up).\n- routes/_app.tsx — the param is left out only for an exact \"/\"; /?x=1 keeps it, which is harmless.\n- e2e/xc-7.spec.ts:28 — each run adds a throwaway account on the shared API (same pattern as XC-5 and XC-6).\n\nCriteria → tests: AC1 ok · AC2 ok, stricter · PO send-back ok."
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T12:53",
+          "body": "AC1 — Signed out, only the sign-in and sign-up screens are visible: pass",
+          "attachments": [
+            {
+              "type": "video",
+              "path": "docs/qa/XC-7/ac1.webm",
+              "label": "AC1",
+              "ac": 1,
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T12:53",
+          "body": "AC2 — Any other page while signed out sends me to sign-in, and signing in returns me to that page (PO send-back): pass",
+          "attachments": [
+            {
+              "type": "video",
+              "path": "docs/qa/XC-7/ac2.webm",
+              "label": "AC2",
+              "ac": 2,
+              "result": "pass"
+            }
+          ]
+        },
+        {
+          "author": "Claude",
+          "role": "AI QA",
+          "created": "2026-11-18T12:53",
+          "body": "QA evidence summary, send-back 1 (evidence run, 2/2 passed):\n- AC1 — Signed out, only the sign-in and sign-up screens are visible: pass\n- AC2 — Any other page while signed out sends me to sign-in: pass. The PO send-back is in the same video, near the end: sign in from /tweets/123?tab=replies#top and land back on that exact page.\n\nRe-run: cd src/frontend && pnpm e2e:evidence e2e/xc-7.spec.ts\n\nMoving to In Acceptance for a person to watch and accept."
+        },
+        {
+          "author": "karcsi",
+          "role": "PO",
+          "created": "2026-11-18T12:53",
+          "body": "PO karcsi: In Acceptance → Done"
+        }
+      ]
     },
     {
       "key": "XC-8",
