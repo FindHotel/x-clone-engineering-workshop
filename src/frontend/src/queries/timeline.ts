@@ -1,4 +1,4 @@
-import { infiniteQueryOptions } from "@tanstack/react-query"
+import { infiniteQueryOptions, type InfiniteData } from "@tanstack/react-query"
 
 export type Tweet = {
   id: string
@@ -41,3 +41,26 @@ export const timelineQueryOptions = infiniteQueryOptions({
   initialPageParam: null as string | null,
   getNextPageParam: (lastPage) => lastPage.nextCursor,
 })
+
+/**
+ * Returns the cached timeline with one tweet changed by `update`, leaving every other page and
+ * tweet as they were (same references), so only that tweet's card re-renders.
+ */
+export function updateTimelineTweet<TPageParam>(
+  data: InfiniteData<TimelinePage, TPageParam> | undefined,
+  tweetId: string,
+  update: (tweet: Tweet) => Tweet
+): InfiniteData<TimelinePage, TPageParam> | undefined {
+  if (!data) return data
+  return {
+    ...data,
+    pages: data.pages.map((page) =>
+      page.items.some((tweet) => tweet.id === tweetId)
+        ? {
+            ...page,
+            items: page.items.map((tweet) => (tweet.id === tweetId ? update(tweet) : tweet)),
+          }
+        : page
+    ),
+  }
+}

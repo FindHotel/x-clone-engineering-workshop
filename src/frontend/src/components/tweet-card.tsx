@@ -1,5 +1,11 @@
+import { HugeiconsIcon } from "@hugeicons/react"
+import { FavouriteIcon } from "@hugeicons/core-free-icons"
+
+import { Button } from "@/components/ui/button"
+import { useLikeTweet } from "@/hooks/use-like-tweet"
 import { formatRelativeTime } from "@/lib/format-relative-time"
 import { formatHandle } from "@/lib/user"
+import { cn } from "@/lib/utils"
 import type { Tweet } from "@/queries/timeline"
 
 export function TweetCard({ tweet }: { tweet: Tweet }) {
@@ -37,6 +43,40 @@ export function TweetCard({ tweet }: { tweet: Tweet }) {
           ))}
         </div>
       )}
+      <footer className="-ml-2 flex items-center gap-4">
+        <LikeButton tweet={tweet} />
+      </footer>
     </article>
+  )
+}
+
+function LikeButton({ tweet }: { tweet: Tweet }) {
+  const { mutate } = useLikeTweet(tweet.id)
+  const liked = tweet.likedByMe
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      aria-pressed={liked}
+      aria-label={`Like, ${tweet.likeCount.toString()} ${tweet.likeCount === 1 ? "like" : "likes"}`}
+      onClick={() => {
+        mutate(!liked)
+      }}
+      className={cn(
+        "rounded-full text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600",
+        liked && "text-rose-600 dark:text-rose-500"
+      )}
+    >
+      <HugeiconsIcon
+        aria-hidden
+        icon={FavouriteIcon}
+        strokeWidth={2}
+        className={cn("size-4", liked && "fill-current")}
+      />
+      {/* Like X, a zero count shows nothing; the label above still says it. */}
+      {tweet.likeCount > 0 && <span className="tabular-nums">{tweet.likeCount}</span>}
+    </Button>
   )
 }
