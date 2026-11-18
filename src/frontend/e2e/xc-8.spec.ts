@@ -179,7 +179,8 @@ test("AC4: with no tweets yet I see a simple empty message", async ({ page, evid
     await page.goto("/")
   })
   await evidence.step("A simple message says there are no tweets yet", async () => {
-    await expect(page.getByText("No tweets yet")).toBeVisible()
+    // Scoped to the page: in evidence runs this step's caption says "no tweets yet" too.
+    await expect(page.getByRole("main").getByText("No tweets yet")).toBeVisible()
     await expect(tweets(page)).toHaveCount(0)
   })
 })
