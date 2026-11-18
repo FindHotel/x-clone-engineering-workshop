@@ -1,5 +1,37 @@
 # XC-10 review: Like and unlike a tweet
 
+## Round 3 (after PO send-back)
+
+**Base commit reviewed:** e407f13 (change set e407f13..18c0bf5)
+**Reviewer:** fresh-eyes subagent (`.claude/skills/review-pr/reviewers/code-reviewer.md`)
+
+**Verdict: APPROVE**
+
+### Blocking
+
+None. The failed-like message is now "Couldn't save your like. Try again." It is the same in
+`src/frontend/src/hooks/use-like-tweet.ts:22`, the unit test (`use-like-tweet.test.tsx:84`) and
+the e2e spec (`xc-10.spec.ts:169`). No copies of the old text remain. The tests match the new
+text and are not weaker.
+
+### Non-blocking
+
+- `src/frontend/src/hooks/use-like-tweet.ts:22`: the unlike-failure message still says
+  "Couldn't remove your like. Try again." If the PO meant both messages, confirm on the ticket.
+  Don't change it without asking.
+
+### Criteria → tests
+
+- AC1 → "AC1: tapping like once likes the tweet; tapping again removes my like": ok
+- AC2 → "AC2: the like count and button update immediately, even on a slow connection": ok
+- AC3 → "AC3: if saving my like fails, the count goes back and I see a message": ok (new
+  message text; covers a failed like and a failed unlike)
+
+### Other checks
+
+No secrets, debug leftovers, new API calls, hard-coded origins or generated-file edits. NF1
+(the optimistic path) is unchanged. NF4 and NF5 are untouched.
+
 ## Round 2 (after send-back 1)
 
 **Base commit reviewed:** 3ffbdcc (change set 3ffbdcc..947b723)
