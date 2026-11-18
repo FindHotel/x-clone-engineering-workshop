@@ -166,7 +166,7 @@ test("AC3: if saving my like fails, the count goes back and I see a message", as
   })
 
   await evidence.step("Saving fails: the count goes back and a message says so", async () => {
-    await expect(page.getByText("Couldn't like the tweet. Try again.")).toBeVisible()
+    await expect(page.getByText("Couldn't save your like. Try again.")).toBeVisible()
     await expect(like).toHaveAttribute("aria-pressed", "false")
     await expectLikes(like, 0)
     const saved = await savedTweet(page, tweet.id)

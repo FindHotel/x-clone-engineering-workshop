@@ -19,7 +19,7 @@ const like: TweetToggle = {
   save: async (tweetId, liked) => (await setTweetLiked(tweetId, liked)).likeCount,
   withCount: (tweet, likeCount) => ({ ...tweet, likeCount }),
   failure: (liked) =>
-    liked ? "Couldn't like the tweet. Try again." : "Couldn't remove your like. Try again.",
+    liked ? "Couldn't save your like. Try again." : "Couldn't remove your like. Try again.",
 }
 
 /** Likes or unlikes a tweet on the timeline, optimistically (see `useTweetToggle`). */

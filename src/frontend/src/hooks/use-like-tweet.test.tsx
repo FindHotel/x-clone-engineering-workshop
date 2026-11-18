@@ -81,7 +81,7 @@ describe("useLikeTweet", () => {
       result.current.mutate(true)
     })
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith("Couldn't like the tweet. Try again.")
+      expect(toast.error).toHaveBeenCalledWith("Couldn't save your like. Try again.")
     })
     expect(cached()).toMatchObject({ likedByMe: false, likeCount: 2 })
   })
