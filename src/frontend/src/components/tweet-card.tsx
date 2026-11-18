@@ -1,53 +1,49 @@
 import { HugeiconsIcon } from "@hugeicons/react"
-import { FavouriteIcon, RepeatIcon } from "@hugeicons/core-free-icons"
+import { Comment01Icon, FavouriteIcon, RepeatIcon } from "@hugeicons/core-free-icons"
+import { useState } from "react"
 
+import { TweetBody } from "@/components/tweet-body"
+import { ReplyComposer, TweetReplies } from "@/components/tweet-replies"
 import { Button } from "@/components/ui/button"
 import { useLikeTweet } from "@/hooks/use-like-tweet"
 import { useRetweetTweet } from "@/hooks/use-retweet-tweet"
-import { formatRelativeTime } from "@/lib/format-relative-time"
-import { formatHandle } from "@/lib/user"
 import { cn } from "@/lib/utils"
 import type { Tweet } from "@/queries/timeline"
 
 export function TweetCard({ tweet }: { tweet: Tweet }) {
-  const postedAt = new Date(tweet.createdAt)
+  const [replying, setReplying] = useState(false)
 
   return (
     <article className="flex flex-col gap-2 border-b border-border px-4 py-3">
-      <header className="flex min-w-0 items-baseline gap-1 text-sm">
-        <span className="truncate font-bold">{tweet.author.name}</span>
-        <span className="truncate text-muted-foreground">{formatHandle(tweet.author.handle)}</span>
-        <span aria-hidden className="text-muted-foreground">
-          ·
-        </span>
-        <time
-          dateTime={tweet.createdAt}
-          title={postedAt.toLocaleString()}
-          className="shrink-0 text-muted-foreground"
-        >
-          {formatRelativeTime(tweet.createdAt)}
-        </time>
-      </header>
-      {tweet.content && (
-        <p className="whitespace-pre-wrap break-words">{tweet.content}</p>
-      )}
-      {tweet.mediaUrls.length > 0 && (
-        <div className="grid grid-cols-2 gap-1 overflow-hidden rounded-xl border border-border">
-          {tweet.mediaUrls.map((url) => (
-            <img
-              key={url}
-              src={url}
-              alt={`Image from ${tweet.author.name}`}
-              loading="lazy"
-              className="max-h-[510px] w-full object-cover only:col-span-2"
-            />
-          ))}
-        </div>
-      )}
+      <TweetBody tweet={tweet} />
       <footer className="-ml-2 flex items-center gap-4">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          aria-expanded={replying}
+          aria-label={`Reply, ${tweet.replyCount.toString()} ${tweet.replyCount === 1 ? "reply" : "replies"}`}
+          onClick={() => {
+            setReplying((open) => !open)
+          }}
+          className="rounded-full text-muted-foreground hover:bg-sky-500/10 hover:text-sky-600"
+        >
+          <HugeiconsIcon aria-hidden icon={Comment01Icon} strokeWidth={2} className="size-4" />
+          {/* As on X, a zero count shows nothing; the label above still says it. */}
+          {tweet.replyCount > 0 && <span className="tabular-nums">{tweet.replyCount}</span>}
+        </Button>
         <RetweetButton tweet={tweet} />
         <LikeButton tweet={tweet} />
       </footer>
+      {tweet.replyCount > 0 && <TweetReplies tweetId={tweet.id} />}
+      {replying && (
+        <ReplyComposer
+          tweetId={tweet.id}
+          onDone={() => {
+            setReplying(false)
+          }}
+        />
+      )}
     </article>
   )
 }

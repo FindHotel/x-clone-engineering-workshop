@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { render as rtlRender, screen } from "@testing-library/react"
+import { fireEvent, render as rtlRender, screen } from "@testing-library/react"
 import type { ReactElement } from "react"
 import { describe, expect, it } from "vitest"
 
@@ -68,5 +68,16 @@ describe("TweetCard", () => {
     const retweet = screen.getByRole("button", { name: "Retweet, 1 retweet" })
     expect(retweet).toHaveAttribute("aria-pressed", "true")
     expect(retweet).toHaveTextContent("1")
+  })
+
+  it("opens a reply box under the tweet when I tap reply", () => {
+    render(<TweetCard tweet={tweet} />)
+    const reply = screen.getByRole("button", { name: "Reply, 0 replies" })
+    expect(screen.queryByRole("textbox", { name: "Your reply" })).not.toBeInTheDocument()
+
+    fireEvent.click(reply)
+
+    expect(reply).toHaveAttribute("aria-expanded", "true")
+    expect(screen.getByRole("textbox", { name: "Your reply" })).toHaveFocus()
   })
 })
