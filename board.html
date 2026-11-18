@@ -12,6 +12,8 @@
       Stories sit in six status columns, shared by every track:
       New → In Progress → In Review → In QA → In Acceptance → Done;
       the page re-reads the data file every few seconds, so tickets move without a reload.
+      Clicking a card (or opening board.html#XC-3) shows that ticket full size in a dialog, with
+      its description, acceptance criteria and comments unfolded; closing it removes the #key.
 
       Any item may carry an optional "comments" list (evidence, review notes):
         "comments": [{
@@ -686,6 +688,131 @@
         justify-content: flex-end;
         margin-top: 12px;
       }
+
+      /* ============================================================
+       Ticket view: one ticket full size, opened by board.html#XC-3
+       ============================================================ */
+      .card.openable {
+        cursor: pointer;
+      }
+
+      .card.openable.movable {
+        cursor: grab;
+      }
+
+      .open-btn {
+        border: none;
+        background: none;
+        color: var(--text-muted);
+        font: inherit;
+        font-size: 0.9rem;
+        line-height: 1;
+        padding: 0 2px;
+        margin-left: auto;
+        cursor: pointer;
+      }
+
+      .open-btn:hover {
+        color: var(--primary);
+      }
+
+      /* Epic cards show their status (already pushed right) before the button. */
+      .card-top .status + .open-btn {
+        margin-left: 0;
+      }
+
+      dialog.ticket {
+        margin: auto;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 0;
+        width: min(1100px, calc(100vw - 32px));
+        max-width: none;
+        max-height: calc(100vh - 32px);
+        background: var(--bg);
+        color: var(--text);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      dialog.ticket[open] {
+        display: flex;
+        flex-direction: column;
+      }
+
+      dialog.ticket::backdrop {
+        background: rgba(0, 0, 0, 0.45);
+      }
+
+      .ticket-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg);
+        font-size: 0.85rem;
+      }
+
+      .ticket-head .status {
+        margin-left: 0;
+      }
+
+      .ticket-head .epic-chip {
+        margin-top: 0;
+        max-width: 360px;
+      }
+
+      .ticket-close {
+        margin-left: auto;
+        font-size: 1.1rem;
+        line-height: 1;
+        padding: 4px 10px;
+      }
+
+      .ticket-body {
+        overflow-y: auto;
+        padding: 20px 24px 28px;
+      }
+
+      .ticket-title {
+        font-size: 1.35rem;
+        font-weight: 700;
+        line-height: 1.3;
+      }
+
+      .ticket-section {
+        margin-top: 22px;
+      }
+
+      .ticket-section .section-title {
+        margin-bottom: 6px;
+      }
+
+      .ticket-body .description {
+        margin-top: 0;
+        color: var(--text);
+      }
+
+      .ticket-body .ac-list li {
+        margin-top: 4px;
+      }
+
+      .ticket-body .attachment video,
+      .ticket-body .attachment img {
+        max-width: 820px;
+      }
+
+      .ticket-hint {
+        margin-top: 8px;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+      }
+
+      .ticket-body .card-foot {
+        margin-top: 22px;
+      }
     </style>
   </head>
   <body>
@@ -714,6 +841,11 @@
           <button class="btn primary" value="confirm" id="pushBackConfirm" disabled>Push back</button>
         </div>
       </form>
+    </dialog>
+
+    <dialog class="ticket" id="ticketModal" aria-labelledby="ticketTitle">
+      <div class="ticket-head" id="ticketHead"></div>
+      <div class="ticket-body" id="ticketBody"></div>
     </dialog>
 
     <script>
@@ -788,7 +920,27 @@
         top.appendChild(key);
         top.appendChild(el("span", "type", item.type || "Item"));
         if (showStatus) top.appendChild(el("span", "status", item.status || "New"));
+        const open = el("button", "open-btn", "⤢");
+        open.type = "button";
+        open.title = "Open full size";
+        open.setAttribute("aria-label", "Open " + item.key);
+        open.addEventListener("click", () => openTicket(item.key));
+        top.appendChild(open);
         card.appendChild(top);
+
+        // Clicking the card (anywhere that isn't a control of its own) or Enter opens the ticket view.
+        card.classList.add("openable");
+        card.tabIndex = 0;
+        card.addEventListener("click", (e) => {
+          if (e.target.closest("a, button, summary, details, textarea, input, select, video, form")) return;
+          if (String(window.getSelection?.() || "")) return; // selecting text, not opening
+          openTicket(item.key);
+        });
+        card.addEventListener("keydown", (e) => {
+          if (e.target !== card || e.key !== "Enter") return;
+          e.preventDefault();
+          openTicket(item.key);
+        });
 
         card.appendChild(el("div", "card-title", item.title || "(no title)"));
 
@@ -889,10 +1041,17 @@
       }
 
       function renderComments(item, comments, column) {
-        const itemKey = item.key;
         const thread = el("details");
         thread.dataset.kind = "comments";
         thread.appendChild(el("summary", null, "Comments (" + comments.length + ")"));
+        thread.appendChild(renderCommentList(item.key, comments));
+        if (serverOnline) thread.appendChild(renderCommentForm(item, column));
+        return thread;
+      }
+
+      // The comments themselves: folded into a card, or shown in full in the ticket view.
+      function renderCommentList(itemKey, comments) {
+        const list = document.createDocumentFragment();
         comments.forEach((comment) => {
           if (!comment || typeof comment !== "object") return;
           const box = el("div", "comment");
@@ -907,10 +1066,9 @@
           (Array.isArray(comment.attachments) ? comment.attachments : []).forEach((a) => {
             if (a && typeof a === "object") box.appendChild(renderAttachment(itemKey, a));
           });
-          thread.appendChild(box);
+          list.appendChild(box);
         });
-        if (serverOnline) thread.appendChild(renderCommentForm(item, column));
-        return thread;
+        return list;
       }
 
       // ---------------------------------------------------------- writing (server mode)
@@ -1229,6 +1387,11 @@
 
       function renderEpic(epic, children) {
         const card = renderCard({ ...epic, status: epicStatus(children) });
+        card.insertBefore(renderProgress(children), card.querySelector(".card-foot"));
+        return card;
+      }
+
+      function renderProgress(children) {
         const count = (cols) => children.filter((c) => cols.includes(columnOf(c))).length;
         const done = count(["Done"]);
         const toAccept = count(["In Acceptance"]);
@@ -1252,8 +1415,7 @@
           track.title = parts.join(" · ");
           progress.appendChild(track);
         }
-        card.insertBefore(progress, card.querySelector(".card-foot"));
-        return card;
+        return progress;
       }
 
       // Last statuses seen, so a card that changes column can flash once.
@@ -1268,6 +1430,7 @@
       })();
 
       function render(data) {
+        currentData = data;
         const items = data.items;
         const project = data.project || {};
         const epics = items.filter((i) => i.type === "Epic");
@@ -1305,7 +1468,7 @@
         );
         const columnScroll = board.querySelector(".columns")?.scrollLeft || 0;
         const focused = document.activeElement;
-        const focusedDraft = focused && focused.dataset && focused.dataset.draftKey
+        const focusedDraft = focused && board.contains(focused) && focused.dataset.draftKey
           ? { key: focused.dataset.draftKey, start: focused.selectionStart, end: focused.selectionEnd }
           : null;
         const cardScroll = new Map(
@@ -1398,24 +1561,188 @@
           }
         }
 
-        highlightFromHash(false);
+        syncTicketFromHash();
       }
 
-      // board.html#XC-3 (the link written into the md files) scrolls to that card and highlights it.
-      // Live redraws re-apply the highlight without scrolling the reader away.
-      function highlightFromHash(scroll = true) {
+      // ---------------------------------------------------------- ticket view
+      // board.html#XC-3 (the link written into the md files, or a click on a card) opens that
+      // ticket full size: description, every acceptance criterion and every comment with its
+      // evidence, unfolded. Closing it drops the key from the URL and shows the board again.
+      const ticketModal = document.getElementById("ticketModal");
+      const ticketHead = document.getElementById("ticketHead");
+      const ticketBody = document.getElementById("ticketBody");
+      let currentData = null;
+      let ticketKey = null;
+      let lastTicketJson = null;
+
+      function hashKey() {
+        try {
+          return decodeURIComponent(location.hash.slice(1));
+        } catch {
+          return "";
+        }
+      }
+
+      function openTicket(key) {
+        if (hashKey() === key) syncTicketFromHash();
+        else location.hash = key; // a history entry, so Back closes it again
+      }
+
+      // Everything the view shows, so a live refresh redraws it only when it actually changed.
+      function ticketView(item) {
+        const items = currentData.items;
+        const isEpic = item.type === "Epic";
+        return {
+          item,
+          epic: isEpic ? null : items.find((i) => i.type === "Epic" && i.key === item.parent) || null,
+          children: isEpic
+            ? items.filter((i) => i.type !== "Epic" && i.parent === item.key).map((c) => ({ key: c.key, status: c.status }))
+            : [],
+          serverOnline,
+        };
+      }
+
+      function syncTicketFromHash() {
         document.querySelectorAll(".card.highlight").forEach((c) => c.classList.remove("highlight"));
-        const key = decodeURIComponent(location.hash.slice(1));
-        if (!key) return;
-        const card = document.getElementById(key);
-        if (!card) return;
-        const panel = card.closest("details.epics-panel");
-        if (panel && !panel.open) panel.open = true;
-        card.classList.add("highlight");
-        if (scroll) card.scrollIntoView({ block: "center", inline: "center" });
+        const key = hashKey();
+        if (!currentData) return; // not loaded yet: render() calls this again
+        const item = key ? currentData.items.find((i) => i.key === key) : null;
+        if (!item) {
+          if (ticketModal.open) ticketModal.close();
+          return;
+        }
+        document.getElementById(key)?.classList.add("highlight");
+        showTicket(item);
+        if (!ticketModal.open) ticketModal.showModal();
       }
 
-      window.addEventListener("hashchange", () => highlightFromHash());
+      function showTicket(item) {
+        const view = ticketView(item);
+        const json = JSON.stringify(view);
+        const same = ticketModal.open && ticketKey === item.key;
+        if (same && json === lastTicketJson) return;
+
+        // Redrawing the ticket that's open (a new comment, a move): keep the reader's place,
+        // their half-typed comment and any evidence video that's playing.
+        const scroll = same ? ticketBody.scrollTop : 0;
+        const keptVideos = new Map(
+          same
+            ? [...ticketBody.querySelectorAll("video[data-video-key]")].map((v) => [
+                v.dataset.videoKey,
+                { video: v, playing: !v.paused && !v.ended },
+              ])
+            : []
+        );
+        const focused = document.activeElement;
+        const draft = same && ticketBody.contains(focused) && focused.dataset.draftKey
+          ? { start: focused.selectionStart, end: focused.selectionEnd }
+          : null;
+
+        ticketKey = item.key;
+        lastTicketJson = json;
+        renderTicket(view);
+
+        ticketBody.querySelectorAll("video[data-video-key]").forEach((fresh) => {
+          const kept = keptVideos.get(fresh.dataset.videoKey);
+          if (!kept) return;
+          fresh.replaceWith(kept.video);
+          if (kept.playing) kept.video.play().catch(() => {});
+        });
+        ticketBody.scrollTop = scroll;
+        if (draft) {
+          const box = ticketBody.querySelector("textarea[data-draft-key]");
+          if (box) {
+            box.focus({ preventScroll: true });
+            box.setSelectionRange(draft.start, draft.end);
+          }
+        }
+      }
+
+      function ticketSection(title) {
+        const section = el("section", "ticket-section");
+        section.appendChild(el("div", "section-title", title));
+        return section;
+      }
+
+      function renderTicket({ item, epic, children }) {
+        const isEpic = item.type === "Epic";
+
+        ticketHead.replaceChildren();
+        const key = el("a", "key", item.key);
+        key.href = "#" + item.key;
+        ticketHead.appendChild(key);
+        ticketHead.appendChild(el("span", "type", item.type || "Item"));
+        ticketHead.appendChild(el("span", "status", isEpic ? epicStatus(children) : columnOf(item)));
+        if (epic) {
+          const chip = el("a", "epic-chip", epic.key + " · " + (epic.title || ""));
+          chip.href = "#" + epic.key;
+          ticketHead.appendChild(chip);
+        }
+        const close = el("button", "btn ticket-close", "×");
+        close.type = "button";
+        close.title = "Close (Esc)";
+        close.setAttribute("aria-label", "Close");
+        close.autofocus = true; // where focus lands when the dialog opens
+        close.addEventListener("click", () => ticketModal.close());
+        ticketHead.appendChild(close);
+
+        ticketBody.replaceChildren();
+        const title = el("h2", "ticket-title", item.title || "(no title)");
+        title.id = "ticketTitle";
+        ticketBody.appendChild(title);
+        if (isEpic) ticketBody.appendChild(renderProgress(children));
+        if (serverOnline && !isEpic) {
+          ticketBody.appendChild(el("p", "ticket-hint",
+            "To move this ticket, close this view and drag the card on the board."));
+        }
+
+        if (item.description) {
+          const section = ticketSection("Description");
+          section.appendChild(el("div", "description", item.description));
+          ticketBody.appendChild(section);
+        }
+
+        const criteria = Array.isArray(item.acceptanceCriteria) ? item.acceptanceCriteria : [];
+        if (criteria.length) {
+          const section = ticketSection("Acceptance criteria");
+          const list = el("ol", "ac-list");
+          criteria.forEach((c) => list.appendChild(el("li", null, c)));
+          section.appendChild(list);
+          ticketBody.appendChild(section);
+        }
+
+        const comments = Array.isArray(item.comments) ? item.comments : [];
+        const section = ticketSection("Comments (" + comments.length + ")");
+        if (!comments.length && !serverOnline) section.appendChild(el("div", "column-empty", "No comments yet."));
+        section.appendChild(renderCommentList(item.key, comments));
+        if (serverOnline) section.appendChild(renderCommentForm(item));
+        ticketBody.appendChild(section);
+
+        const foot = el("div", "card-foot");
+        if (item.source) {
+          const source = el("a", null, "Open in the md file →");
+          source.href = item.source;
+          foot.appendChild(source);
+        }
+        foot.appendChild(el("span", null, item.updated ? "Updated " + formatTime(item.updated) : ""));
+        ticketBody.appendChild(foot);
+      }
+
+      // × , Esc and a click on the backdrop all close it; the URL goes back to the plain board.
+      ticketModal.addEventListener("click", (e) => {
+        if (e.target === ticketModal) ticketModal.close();
+      });
+      ticketModal.addEventListener("close", () => {
+        const key = ticketKey;
+        ticketKey = null;
+        lastTicketJson = null;
+        ticketBody.replaceChildren(); // also stops any evidence video still playing
+        if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+        document.querySelectorAll(".card.highlight").forEach((c) => c.classList.remove("highlight"));
+        if (key) document.getElementById(key)?.focus();
+      });
+
+      window.addEventListener("hashchange", syncTicketFromHash);
 
       // A syntax error in the data file surfaces here, not as a script "error" event.
       window.addEventListener("error", (e) => {
