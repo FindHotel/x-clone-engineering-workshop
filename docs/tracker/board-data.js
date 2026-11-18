@@ -196,11 +196,11 @@ window.BOARD = {
         "If there are no tweets yet, I see a simple empty message."
       ],
       "parent": "XC-2",
-      "status": "In Review",
+      "status": "In QA",
       "source": "docs/stories/x-clone-v3-epic-2-stories.md#story-21-scroll-the-home-timeline",
       "created": "2026-11-12T10:00",
-      "updated": "2026-11-18T12:19",
-      "updates": 6,
+      "updated": "2026-11-18T12:21",
+      "updates": 8,
       "comments": [
         {
           "author": "Claude",
@@ -225,6 +225,12 @@ window.BOARD = {
           "role": "AI Dev",
           "created": "2026-11-18T12:19",
           "body": "Built in f41ccfe (base f96528e). AC1 follows the PO's decision (option 1, 12:15): the timeline is GET /api/timeline, i.e. the reader's own tweets plus those of the accounts they follow, newest first.\n\nFiles changed\n- src/queries/timeline.ts (+ test): infinite query on /api/timeline, 20 per page, cursor paging, credentials: \"include\"\n- src/hooks/use-load-more-on-scroll.ts (+ test): IntersectionObserver sentinel, re-armed after each page\n- src/components/tweet-card.tsx (+ test): name, @handle, relative time in <time datetime>, text, images\n- src/lib/user.ts (+ test): formatHandle\n- src/routes/_app/index.tsx: the home page is now the timeline, with loading, empty (\"No tweets yet…\"), error and retry states (replaces the \"Welcome\" placeholder)\n- e2e/xc-8.spec.ts: one test per AC\n\nChecks\n- pnpm exec tsc -b: pass\n- pnpm lint: pass\n- pnpm test (Vitest): 15/15 pass\n- pnpm e2e e2e/xc-8.spec.ts: 4/4 pass (green on the 3rd run: run 1 was missing an Origin header in the test setup; run 2 caught the @@handle bug below)\n- pnpm e2e e2e/smoke.spec.ts: pass. xc-5.spec.ts not re-run (it signs up accounts on the shared API; the sign-up screens didn't change)\n\nFor the reviewer\n- AC1's text still says \"all users\". Rewording it to match the PO's decision is up to the PO.\n- The API is inconsistent about handles: the sign-up user's handle has no \"@\", but the timeline's author.handle starts with one. formatHandle shows exactly one \"@\" either way.\n- The e2e tests sign up throwaway accounts (xc8-…@example.com) on the shared API and post about 30 tweets per run, one with a 1x1 PNG. Each test signs its own browser context in with that account's cookie; the person's saved sign-in is never used or changed. Ran with the person's OK.\n- The next-page error state has a \"Try again\" button. It only appears after a failed load, so it isn't a \"next page\" button (AC2).\n- Like, retweet and reply counts are in the Tweet type but not shown yet; that's XC-10, XC-11 and XC-12."
+        },
+        {
+          "author": "Claude",
+          "role": "AI Review",
+          "created": "2026-11-18T12:21",
+          "body": "Review: APPROVE, no blocking findings (base f96528e). Full review: docs/reviews/xc-8-review.md\n\nNon-blocking:\n1. AC1/R4 still say \"all users\", but the build follows the PO's option 1 (own + followed accounts). The story text needs the PO's rewording.\n2. xc-8.spec.ts:32: each run adds 5 throwaway accounts and about 30 tweets to the shared API.\n3. xc-8.spec.ts:15: BASE_URL repeats playwright.config.ts's baseURL.\n4. xc-8.spec.ts:120: the check for 20 tweets before scrolling depends on the 1280x720 viewport and the 400px rootMargin, so it could get flaky.\n5. xc-8.spec.ts:159: the time regex is loose; the datetime attribute check is what really covers the time."
         }
       ]
     },
